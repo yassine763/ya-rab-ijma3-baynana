@@ -50,6 +50,10 @@
 
   .content{ position:relative; z-index:1; width:100%; max-width:780px; display:flex; flex-direction:column; align-items:center; }
 
+  #embers{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+  }
+
   .eyebrow{
     letter-spacing:.35em;
     font-size:12px;
@@ -228,6 +232,7 @@
 </head>
 <body>
 <div class="stars"></div>
+<canvas id="embers"></canvas>
 <div class="content">
 
   <div class="eyebrow">بإذن الله</div>
@@ -318,6 +323,56 @@
 
   tick();
   setInterval(tick, 1000);
+
+  // Rising golden light particles — like prayers and hopes ascending
+  (function(){
+    const canvas = document.getElementById('embers');
+    const ctx = canvas.getContext('2d');
+    let w, h, particles;
+
+    function resize(){
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function makeParticle(startAtBottom){
+      return {
+        x: Math.random() * w,
+        y: startAtBottom ? h + Math.random() * 60 : Math.random() * h,
+        r: 0.6 + Math.random() * 1.8,
+        speed: 0.15 + Math.random() * 0.35,
+        drift: (Math.random() - 0.5) * 0.3,
+        alpha: 0.15 + Math.random() * 0.5,
+        twinkle: Math.random() * Math.PI * 2
+      };
+    }
+
+    const count = Math.min(60, Math.floor((w * h) / 22000));
+    particles = Array.from({length: count}, () => makeParticle(true));
+
+    function draw(){
+      ctx.clearRect(0, 0, w, h);
+      particles.forEach(p => {
+        p.y -= p.speed;
+        p.x += p.drift;
+        p.twinkle += 0.03;
+        if(p.y < -10){
+          Object.assign(p, makeParticle(true));
+        }
+        const flicker = 0.6 + 0.4 * Math.sin(p.twinkle);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(230, 207, 152, ${p.alpha * flicker})`;
+        ctx.shadowColor = 'rgba(201, 164, 76, 0.8)';
+        ctx.shadowBlur = 6;
+        ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
 </script>
 </body>
 </html>
